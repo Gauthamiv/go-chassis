@@ -27,14 +27,18 @@ func CheckForSessionID(inv *invocation.Invocation, autoTimeout int, resp *fastht
 	timeValue := time.Duration(autoTimeout) * time.Second
 
 	sessionIDStr := string(req.Header.Cookie(common.LBSessionID))
+	var sessBool bool
 
 	loadbalance.SessionCache.DeleteExpired()
 
 	valueChassisLb := getCookie(common.LBSessionID, resp)
+        if  sessionIDStr!= "" {
+                _, sessBool = loadbalance.SessionCache.Get(sessionIDStr)
+        }
 
 	if string(valueChassisLb) != "" {
 		loadbalance.Save(string(valueChassisLb), inv.Endpoint, timeValue)
-	} else if sessionIDStr != "" {
+	} else if sessionIDStr != "" && sessBool {
 		var c1 *fasthttp.Cookie
 		c1 = new(fasthttp.Cookie)
 		c1.SetKey(common.LBSessionID)
