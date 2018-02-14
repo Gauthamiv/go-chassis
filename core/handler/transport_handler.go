@@ -53,8 +53,15 @@ func (th *TransportHandler) Handle(chain *Chain, i *invocation.Invocation, cb in
 		if i.Protocol == common.ProtocolRest && i.Strategy == loadbalance.StrategySessionStickiness {
 			var reply *rest.Response
 			reply = i.Reply.(*rest.Response)
-			errCount := loadbalance.GetSuccessiveFailureCount(i.Endpoint)
+			if i.Reply != nil && req.Arg != nil {
+				reply = i.Reply.(*rest.Response)
+				req := req.Arg.(*rest.Request)
+				session.CheckForSessionID(i, StrategySessionTimeout(i), reply.GetResponse(), req.GetRequest())
+			}
+
 			loadbalance.IncreaseSuccessiveFailureCount(i.Endpoint)
+			errCount := loadbalance.GetSuccessiveFailureCount(i.Endpoint)
+			//			loadbalance.IncreaseSuccessiveFailureCount(i.Endpoint)
 			if errCount == StrategySuccessiveFailedTimes(i) {
 				session.DeletingKeySuccessiveFailure(reply.GetResponse())
 				loadbalance.ResetSuccessiveFailureCount(i.Endpoint)

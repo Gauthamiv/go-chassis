@@ -53,11 +53,16 @@ func CheckForSessionID(inv *invocation.Invocation, autoTimeout int, resp *fastht
 
 	ClearExpired()
 
+	var sessBool bool
+	if sessionIDStr != "" {
+		_, sessBool = SessionCache.Get(sessionIDStr)
+	}
+
 	valueChassisLb := GetSessionFromResp(common.LBSessionID, resp)
 	//if session is in resp, then just save it
 	if string(valueChassisLb) != "" {
 		Save(valueChassisLb, inv.Endpoint, timeValue)
-	} else if sessionIDStr != "" {
+	} else if sessionIDStr != "" && sessBool {
 		var c1 *fasthttp.Cookie
 		c1 = new(fasthttp.Cookie)
 		c1.SetKey(common.LBSessionID)
